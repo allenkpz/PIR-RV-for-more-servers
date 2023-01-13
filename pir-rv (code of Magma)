@@ -1,0 +1,68 @@
+// This is a Magma code to calculate the determinant of N, 
+// and the (4k-4)*(2k-2) matrix S, which satisfy that S* [delta_{3},..,delta_{2k}]^T 
+// = [nu_{1},...,nu_{4k-4}], where nu(lambda) is the function  |N| = \sum_{j = 0}^{4k-4} nu_{j} lambda_{1}^{j}.
+
+ClearPrevious();
+k := 4;
+
+R:=PolynomialRing(Rationals(), 3 * k + 1);
+// delta_{1}...delta_{2k},lambda_{1},...,lambda{k},Y
+// delta_{1} = delta_{2} = 0
+
+A := [];
+for i := 1 to 2 * k do
+	// j = 1
+	Append(~A,R.i);
+
+	// j = 2
+	if (i mod 2 eq 1) then
+		Append(~A, 1 + R.(2 * k + Ceiling(i / 2)) *  R.(3 * k + 1) );
+		// 1 + s((i+1)//2)Y 
+	else
+		Append(~A,  R.(3 * k + 1) );
+		// Y
+	end if;
+
+	// j = 3 to 2 * k
+	for j := 3 to 2 * k do
+		if (i mod 2 eq 1) then
+			Append(~A, R.(2 * k + Ceiling(i / 2))^(j-1) );
+			// lambda_{j}^{j-1}
+		else
+			Append(~A, (j - 1)* R.(2 * k + Ceiling(i / 2))^(j-2) );
+			// (j-1) * lambda_{j}^{j-2}
+		end if;
+	end for;
+end for;
+
+N:= Matrix(R,2*k, 2*k,A);
+
+
+detN := Determinant(N);
+
+coeffs := Coefficients(detN,R.(2 * k + 1) );
+
+S := [];
+for i:= 2 to #coeffs do   
+// nu_{0} = 0, so ignore i = 1
+
+	for j := 3 to 2 * k do
+	// delta_{1} = delta_{2} = 0, so ignore j = 1,2
+
+		temp := Coefficients(coeffs[i], R.j);
+		if (#temp ge 2) then
+			Append(~S, temp[#temp]);
+		else
+			Append(~S, elt<R|0>);
+		end if;
+	end for;
+end for;
+
+
+S := Matrix(R,#coeffs - 1,2 * k - 2, S);
+subS := Submatrix(S, 1, 1, 2 * k - 2, 2 * k - 2);
+
+det := Determinant(subS);
+
+Factorization(det);
+
